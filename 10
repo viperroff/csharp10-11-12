@@ -1,0 +1,142 @@
+using System;
+
+public class CPoint
+{
+    public double X { get; set; }
+    public double Y { get; set; }
+
+    public CPoint() : this(0, 0) { } 
+
+    public CPoint(double x, double y)
+    {
+        X = x;
+        Y = y;
+    }
+}
+
+public class CTetragon
+{
+    protected CPoint[] vertices;
+
+    public CTetragon()
+    {
+        vertices = new CPoint[4];
+        for (int i = 0; i < 4; i++)
+            vertices[i] = new CPoint();
+    }
+
+    public CTetragon(CPoint p1, CPoint p2, CPoint p3, CPoint p4)
+    {
+        vertices = new CPoint[] { p1, p2, p3, p4 };
+    }
+
+    public virtual double GetArea()
+    {
+        return 0;
+    }
+
+
+
+    public virtual double GetPerimeter()
+    {
+        double perimeter = 0;
+        for (int i = 0; i < 4; i++)
+        {
+            int next = (i + 1) % 4;
+            perimeter += Distance(vertices[i], vertices[next]);
+        }
+        return perimeter;
+    }
+
+    public CPoint[] Vertices 
+    {
+        get { return vertices; }
+    }
+
+    protected double Distance(CPoint p1, CPoint p2)
+    {
+        return Math.Sqrt(Math.Pow(p2.X - p1.X, 2) + Math.Pow(p2.Y - p1.Y, 2));
+    }
+
+    public void Move(double deltaX, double deltaY)
+    {
+        foreach (var vertex in vertices)
+        {
+            vertex.X += deltaX;
+            vertex.Y += deltaY;
+        }
+    }
+}
+
+public class CParallelogram : CTetragon
+{
+    public CParallelogram(CPoint p1, CPoint p2, CPoint p3, CPoint p4) : base(p1, p2, p3, p4)
+    {
+        if (!IsParallelogram(p1, p2, p3, p4))
+        {
+            throw new ArgumentException("Переданные точки не образуют параллелограмм.");
+        }
+    }
+
+    private bool IsParallelogram(CPoint p1, CPoint p2, CPoint p3, CPoint p4)
+    {
+        return Distance(p1, p2) == Distance(p3, p4) && Distance(p1, p4) == Distance(p2, p3);
+    }
+
+    public override double GetArea()
+    {
+        double area = 0.5 * Math.Abs(
+            vertices[0].X * vertices[1].Y + vertices[1].X * vertices[2].Y +
+            vertices[2].X * vertices[3].Y + vertices[3].X * vertices[0].Y -
+            (vertices[1].X * vertices[0].Y + vertices[2].X * vertices[1].Y +
+             vertices[3].X * vertices[2].Y + vertices[0].X * vertices[3].Y)
+        );
+        return area;
+    }
+
+    public static bool operator <(CParallelogram a, CParallelogram b)
+    {
+        return a.GetArea() < b.GetArea();
+    }
+
+    public static bool operator >(CParallelogram a, CParallelogram b)
+    {
+        return a.GetArea() > b.GetArea();
+    }
+
+    public override bool Equals(object obj)
+    {
+        if (obj is CParallelogram other)
+            return this.GetArea() == other.GetArea();
+        return false;
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        CPoint p1 = new CPoint(0, 0);
+        CPoint p2 = new CPoint(4, 0);
+        CPoint p3 = new CPoint(5, 3);
+        CPoint p4 = new CPoint(1, 3);
+        
+        CParallelogram parallelogram = new CParallelogram(p1, p2, p3, p4);
+        Console.WriteLine("Площадь параллелограмма: " + parallelogram.GetArea());
+        Console.WriteLine("Периметр параллелограмма: " + parallelogram.GetPerimeter());
+        
+        parallelogram.Move(2, 2);
+        Console.WriteLine("Параллелограмм перемещён на (2, 2). Новые координаты вершин:");
+        foreach (var vertex in parallelogram.Vertices)
+        {
+            Console.WriteLine($"({vertex.X}, {vertex.Y})");
+        }
+
+        CParallelogram anotherParallelogram = new CParallelogram(new CPoint(0, 0), new CPoint(2, 0), new CPoint(3, 2), new CPoint(1, 2));
+
+        if (parallelogram < anotherParallelogram)
+            Console.WriteLine("Первый параллелограмм меньше второго по площади.");
+        else
+            Console.WriteLine("Первый параллелограмм больше второго по площади.");
+    }
+}
