@@ -1,0 +1,105 @@
+using System;
+using System.Collections.Generic;
+
+public enum EventLevel 
+{ 
+    Low, 
+    Medium, 
+    High 
+} 
+
+public class HistoricalEvent : IComparable<HistoricalEvent>, IComparer<HistoricalEvent> 
+{ 
+    public string EventName { get; set; } 
+    public int Year { get; set; } 
+    public EventLevel Level { get; set; } 
+
+    public HistoricalEvent(string eventName, int year, EventLevel level) 
+    { 
+        EventName = eventName; 
+        Year = year; 
+        Level = level; 
+    } 
+
+    public int CompareTo(HistoricalEvent other) 
+    { 
+        if (other == null) return 1; 
+        int levelComparison = this.Level.CompareTo(other.Level);
+        if (levelComparison != 0) return levelComparison;
+        int yearComparison = this.Year.CompareTo(other.Year);
+        return yearComparison != 0 ? yearComparison : string.Compare(this.EventName, other.EventName, StringComparison.Ordinal);
+    } 
+
+    public int Compare(HistoricalEvent x, HistoricalEvent y) 
+    { 
+        if (x == null || y == null) return 0; 
+        return x.CompareTo(y);
+    } 
+
+    public static bool operator ==(HistoricalEvent a, HistoricalEvent b) 
+    { 
+        if (ReferenceEquals(a, b)) return true; 
+        if (a is null || b is null) return false; 
+        return a.Level == b.Level && a.Year == b.Year && a.EventName == b.EventName; 
+    } 
+
+    public static bool operator !=(HistoricalEvent a, HistoricalEvent b) 
+    { 
+        return !(a == b); 
+    } 
+
+    public override bool Equals(object obj) 
+    { 
+        return obj is HistoricalEvent other && this == other; 
+    } 
+
+    public override int GetHashCode() 
+    { 
+        return (int)Level ^ Year ^ (EventName?.GetHashCode() ?? 0); 
+    } 
+
+    public override string ToString() 
+    { 
+        return $"{Year}: {EventName} (Level: {Level})"; 
+    } 
+} 
+
+public class Program 
+{ 
+    public static void Main() 
+    { 
+        HistoricalEvent[] events = new HistoricalEvent[] 
+        { 
+            new HistoricalEvent("Падение Берлинской стены", 1989, EventLevel.High), 
+            new HistoricalEvent("Начало Второй мировой войны", 1939, EventLevel.High), 
+            new HistoricalEvent("Открытие Америки", 1492, EventLevel.Medium), 
+            new HistoricalEvent("Крещение Руси", 988, EventLevel.Medium), 
+            new HistoricalEvent("Первый Iphone", 2007, EventLevel.High) 
+        }; 
+        
+        Array.Sort(events); 
+        Console.WriteLine("События отсортированы по уровням:"); 
+        foreach (var e in events) 
+        { 
+            Console.WriteLine(e); 
+        } 
+        
+        Array.Sort(events, new HistoricalEvent("", 0, EventLevel.Low)); 
+        Console.WriteLine("\nСобытия отсортированы по имени и году:"); 
+        foreach (var e in events) 
+        { 
+            Console.WriteLine(e); 
+        } 
+        
+        EventLevel searchLevel = EventLevel.Medium; 
+        Console.WriteLine($"\nПоиск событий по уровню {searchLevel}:"); 
+        foreach (var e in events) 
+        { 
+            if (e.Level == searchLevel) 
+            { 
+                Console.WriteLine(e); 
+            } 
+        } 
+    } 
+}
+   
