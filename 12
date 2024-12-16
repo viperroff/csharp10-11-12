@@ -1,0 +1,90 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
+public class HistoricalEvent
+{
+    public string Name { get; set; }
+    public int Year { get; set; }
+    public string Significance { get; set; }
+
+    public HistoricalEvent(string name, int year, string significance)
+    {
+        Name = name;
+        Year = year;
+        Significance = significance;
+    }
+
+    public static int operator -(HistoricalEvent a, HistoricalEvent b)
+    {
+        return Math.Abs(a.Year - b.Year);
+    }
+
+    public static void RemoveEvent(List<HistoricalEvent> events, string name)
+    {
+        var eventToRemove = events.FirstOrDefault(e => e.Name == name);
+        if (eventToRemove != null)
+            events.Remove(eventToRemove);
+    }
+
+    public static List<HistoricalEvent> FindEventsBySignificance(List<HistoricalEvent> events, string significance)
+    {
+        return events.Where(e => e.Significance == significance).ToList();
+    }
+
+    public static List<HistoricalEvent> LoadFromFile(string filePath)
+    {
+        var events = new List<HistoricalEvent>();
+        foreach (var line in File.ReadLines(filePath))
+        {
+            var parts = line.Split(',');
+            events.Add(new HistoricalEvent(parts[0], int.Parse(parts[1]), parts[2]));
+        }
+        return events;
+    }
+
+    public static void SaveToFile(string filePath, List<HistoricalEvent> events)
+    {
+        using (var writer = new StreamWriter(filePath))
+        {
+            foreach (var evt in events)
+            {
+                writer.WriteLine($"{evt.Name},{evt.Year},{evt.Significance}");
+            }
+        }
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        List<HistoricalEvent> events = new List<HistoricalEvent>()
+        {
+            new HistoricalEvent("Падение Берлинской стены", 1989, "Высокий"),
+            new HistoricalEvent("Начало Второй мировой войны", 1939, "Высокий"),
+            new HistoricalEvent("Открытие Америки", 1492, "Средний"),
+            new HistoricalEvent("Первый Iphone", 2007, "Высокий")
+            
+        };
+
+        string filePath = "events.txt";
+
+        HistoricalEvent.SaveToFile(filePath, events);
+        Console.WriteLine("События сохранены.");
+
+        var yearDiff = events[0] - events[1];
+        Console.WriteLine($"Разница в годах между '{events[0].Name}' и '{events[1].Name}': {yearDiff} год(а, лет)");
+
+        HistoricalEvent.RemoveEvent(events, "Начало Второй мировой войны");
+        Console.WriteLine("Событие 'Начало Второй мировой войны' удалено.");
+
+        var significantEvents = HistoricalEvent.FindEventsBySignificance(events, "Высокий");
+        Console.WriteLine("События с высокой значимостью:");
+        foreach (var evt in significantEvents)
+        {
+            Console.WriteLine(evt.Name);
+        }
+    }
+}
